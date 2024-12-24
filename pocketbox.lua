@@ -6,7 +6,9 @@ settings.define("pocketbox.shuffle",{
 	type = "boolean"
 })
 settings.save()
-local s = peripheral.find("speaker")
+if not peripheral.find("speaker") then
+	error("No speakers attached!",0)
+end
 
 local termX,termY = term.getSize()
 local frame = window.create(term.current(), 1, 1, termX, termY)
@@ -46,7 +48,6 @@ local function getMonoFunctions()
 	end
 	return speakers
 end
-
 local function getFrames(first,last,dat)
 	local a = {}
 	for i=first,last do
@@ -139,7 +140,12 @@ end
 local function music()
     while true do
 		local song = getSong()
-		playSong(song)
+		local success, response = pcall(playSong,song)
+		if not success then
+			term.clear()
+			term.setCursorPos(1,1)
+			error("Failed to play song! "..song["artist"].." - "..song["title"],0)
+		end
         sleep()
     end
 end
@@ -178,7 +184,10 @@ local function display()
 end
 local function input()
 	while true do
-		local event, button, x, y = os.pullEvent("mouse_click")
+		local event, button, x, y = os.pullEventRaw("mouse_click","terminate")
+		if event == "terminate" then
+			error("Terminated.",0)
+		end
 		if y == termY then
 			if x == termX-2 then
 				isPaused = not isPaused
